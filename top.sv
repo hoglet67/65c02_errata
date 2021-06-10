@@ -58,8 +58,8 @@ module top
 
    // Clock Enable signals
    reg [CLKEN_BITS-1:0] clken_ctr = 0;
-   reg               cpu_clken;
-   reg               via_clken;
+   reg               cpu_clken; // Clock enable for the CPU
+   reg               per_clken; // Clock enable for the VIA/ACIA
 
    // CPU signals
    wire [7:0]        cpu_din;
@@ -108,7 +108,7 @@ module top
    always @(posedge clk) begin
       clken_ctr <= clken_ctr + 1'b1;
       cpu_clken <= &clken_ctr; // active when all 1's
-      via_clken <= cpu_clken;
+      per_clken <= cpu_clken;  // one cycle later than the CPU
    end
 
 `ifdef USE_ALAND_CORE
@@ -243,12 +243,12 @@ module top
    assign acia_e = (cpu_addr >= 16'h8000 && cpu_addr <= 16'h800F);
 
    // Include cpu_clken here to avoid muptiple accesses
-   assign acia_csb = !(acia_e && cpu_clken);
+   assign acia_csb = !(acia_e && per_clken);
 
    ACIA ACIA_a
      (
       .RESET(resb),         //: in     std_logic;
-      .PHI2(clk),           //: in     std_logic;
+      .PHI2(!clk),          //: in     std_logic;
       .CS(acia_csb),        //: in     std_logic;
       .RWN(!cpu_we),        //: in     std_logic;
       .RS(cpu_addr[1:0]),   //: in     std_logic_vector(1 downto 0);
@@ -273,7 +273,7 @@ module top
      (
       .CLK(clk),
       .RESET_L(resb),
-      .I_P2_H(via_clken),        // clock enable for CPU interface
+      .I_P2_H(per_clken),        // clock enable for CPU interface
       .ENA_4(1'b1),              // clock enable for counters/timers
       .I_RS(cpu_addr[3:0]),
       .I_DATA(cpu_dout),
@@ -304,7 +304,7 @@ module top
       );
 
    always @(posedge clk) begin
-      if (via_clken) begin
+      if (per_clken) begin
          via_dout_r <= via_dout;
       end
    end
