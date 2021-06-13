@@ -1,12 +1,19 @@
 `timescale 1ns/1ns
 
-// 4MHz System Clock
-`define T_clock 250
+// 50MHz System Clock
+`define T_clock 20
 
 // 1.8432MHz ACIA Clock
 `define T_acia_clock 542
 
 module top_tb;
+
+   // This just contains a reset vector pointing to $3400
+   parameter ROM_IMAGE = "null_rom.hex";
+
+   // The Dormann tests have been compiled to run at $3400
+   parameter RAM_IMAGE = "dormann_6502.hex";
+   // parameter RAM_IMAGE = "dormann_65c02.hex";
 
    reg clk;
    reg reset;
@@ -24,6 +31,7 @@ module top_tb;
    wire        phi2;
    wire        led_a;
    wire        resb;
+   wire        sync;
 
    reg [7:0]   write_data = 8'hZZ;
 
@@ -35,9 +43,11 @@ module top_tb;
    wire        via_ca2;
    wire        via_cb1;
    wire        via_cb2;
+   integer     trace_fd;
 
    initial  begin
-      $dumpvars();
+      trace_fd=$fopen("trace.hex", "w");
+      //$dumpvars();
       // ACIA
       acia_clk   = 1'b0;
       rxd   = 1'b1;
@@ -55,9 +65,14 @@ module top_tb;
          @(posedge clk);
       end
       reset = 1'b0;
-      #(`T_clock * 1000000)
-      $finish;
+      //#(`T_clock * 1000000)
+      //$finish;
    end
+
+   always @(negedge phi2) begin
+      $fwrite(trace_fd, "%h\n", {data_io, 6'b111111, sync, rwb});
+   end
+
 
    always #(`T_clock / 2) begin
       clk = ~clk;
@@ -77,6 +92,10 @@ module top_tb;
       end
    end
 
+   defparam top.CLKEN_BITS = 3;
+   defparam top.main_ram.INIT_FILE = RAM_IMAGE;
+   defparam top.main_rom.INIT_FILE = ROM_IMAGE;
+
    // Unit under test
    top top
      (
@@ -89,6 +108,7 @@ module top_tb;
       // External 6502 bus interface
       .phi2(phi2),
       .resb(resb),
+      .sync(sync),
       //.address(address),
       .rwb(rwb),
       .data_io(data_io),

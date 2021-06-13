@@ -4,8 +4,6 @@ SRCDIR=../..
 
 SIM=soc65c02
 
-ROM=rtest_hex.txt
-
 rm -f dump.vcd $SIM
 
 iverilog  -o $SIM \
@@ -19,9 +17,7 @@ iverilog  -o $SIM \
 
 if [ -f $SIM ]; then
 
-    cp ../../$ROM .
     ./$SIM
-    rm -f $ROM
 
     if [ -f dump.vcd ]; then
 
