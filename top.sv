@@ -77,6 +77,9 @@ module top
    wire              acia_csb;
    wire [7:0]        acia_dout;
 
+   // Bus signals
+   wire              bus_e;
+
    // VIA signals
    wire              via_e;
    wire [7:0]        via_dout;
