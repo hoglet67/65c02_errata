@@ -46,7 +46,8 @@
  * If IMPLEMENT_CORRECT_BCD_FLAGS is defined, this additional logic is added
  */
 
-// `define IMPLEMENT_CORRECT_BCD_FLAGS
+`define IMPLEMENT_CORRECT_BCD_FLAGS
+`define IMPLEMENT_CORRECT_BCD_FLAGS
 
 module cpu_65c02( clk, reset, AB, DI, DO, WE, IRQ, NMI, RDY, SYNC );
 
@@ -834,7 +835,8 @@ always @(posedge clk )
  * Special Z flag got TRB/TSB
  */
 always @(posedge clk)
-    AZ2 <= ~|(AI & regfile);
+    if (RDY)
+        AZ2 <= ~|(AI & regfile);
 
 /*
  * Update Z, N flags when writing A, X, Y, Memory, or when doing compare
