@@ -50,7 +50,7 @@ module top
 
    // Clock-enable counter size - the CPU runs at:
    //    system clock rate / (2 ** CLKEN_BITS)
-   parameter CLKEN_BITS = 2;
+   parameter CLKEN_BITS = 4;
 
    // RAM/ROM sizing
    parameter RAM_ADDR_BITS = 15;   // 32K
@@ -82,6 +82,7 @@ module top
 
    // Bus signals
    wire              bus_e;
+   reg [7:0]         bus_data;
 
    // VIA signals
    wire              via_e;
@@ -113,7 +114,7 @@ module top
    // keeps being clocked when reset is asserted.
    always @(posedge clk) begin
       clken_ctr <= clken_ctr + 1'b1;
-      cpu_clken <= &clken_ctr; // active when all 1's
+      cpu_clken <= (clken_ctr == 0);
       per_clken <= cpu_clken;  // one cycle later than the CPU
    end
 
@@ -190,13 +191,18 @@ module top
 
 `endif
 
+   // Sample bus_data on the falling edge of phi2
+   always @(negedge phi2) begin
+      bus_data <= data_io;
+   end
+
    // CPU data input mux, default to the external bus if
    // nothing internal is selected.
    assign cpu_din = ram_e  ? ram_dout   :
                     rom_e  ? rom_dout   :
                     acia_e ? acia_dout  :
                     via_e  ? via_dout_r :
-                    data_io;
+                    bus_data;
 
    // ========================================================
    // RAM
