@@ -36,6 +36,9 @@ module top
    inout         via_cb1,
    inout         via_cb2,
 // output [15:0] address,
+   input         viaintb,
+   output        viacsb,
+   output [3:0]  addr,
    output        rwb,
    output        sync,
    output        phi2,
@@ -337,6 +340,10 @@ module top
    assign resb = !reset;
 
    assign rwb = !cpu_we;
+
+   assign addr = cpu_addr[3:0];
+
+   assign viacsb = !(cpu_addr >= 16'h8100 && cpu_addr <= 16'h810F);
 
    // TODO: ideally this should be visible externally
    // assign address = cpu_addr;
